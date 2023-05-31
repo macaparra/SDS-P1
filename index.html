@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Aplicación</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    
+    h1 {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    #container {
+      max-width: 400px;
+      margin: 20px auto;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #cuadricula {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      width: 300px;
+      height: 300px;
+      border: 1px solid black;
+      margin: 0 auto 20px;
+    }
+    
+    .celula {
+      border: 1px solid lightgray;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ebrio {
+      width: 90%;
+      height: 90%;
+      border-radius: 50%;
+      background-color: red;
+    }
+
+    .inicio {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: blue;
+    }
+
+    #resultado {
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #probabilidad {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    #boton-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    #inicioBtn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #inicioBtn:hover {
+      background-color: #45a049;
+    }
+
+    #estadisticas {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Aplicación - Simulacio problema del ebrio&#127866</h1>
+    <div id="cuadricula"></div>
+    <p id="resultado">&#9203; Cargando recorrido...</p>
+    <p id="probabilidad"></p>
+    <div id="boton-container">
+      <button id="inicioBtn">Iniciar simulación</button>
+    </div>
+    <div id="estadisticas">
+      <p>Veces que el ebrio terminó a 2 calles: <span id="termino2Calles">0</span></p>
+      <p>Veces que se ejecuta la simulacion: <span id="reiniciosSimulacion">0</span></p>
+      <h6> &#128105Realizado por: Macarena Parra</h6>
+    </div>
+  </div>
+
+  <script>
+    let termino2Calles = 0;
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const cuadricula = document.getElementById('cuadricula');
+      const celdas = [];
+
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+          const celda = document.createElement('div');
+          celda.className = 'celula';
+          cuadricula.appendChild(celda);
+          celdas.push(celda);
+        }
+      }
+
+      const ebrio = document.createElement('div');
+      ebrio.className = 'ebrio';
+      celdas[44].appendChild(ebrio); // Posición inicial del ebrio en la celda central (4, 4)
+
+      const inicio = document.createElement('div');
+      inicio.className = 'inicio';
+      celdas[44].appendChild(inicio); // Marcador visual de la posición inicial
+
+      const resultadoTexto = document.getElementById('resultado');
+      const probabilidadTexto = document.getElementById('probabilidad');
+      const termino2CallesTexto = document.getElementById('termino2Calles');
+      const reiniciosSimulacionTexto = document.getElementById('reiniciosSimulacion');
+      let totalSimulaciones = 0;
+      let reiniciosSimulacion = 1;
+
+      function ebrioAleatorio() {
+        const direcciones = ['norte', 'sur', 'este', 'oeste'];
+        const direccion = direcciones[Math.floor(Math.random() * direcciones.length)];
+        return direccion;
+      }
+
+      function moverEbrio() {
+        const direccion = ebrioAleatorio();
+        const posicionActual = celdas.findIndex(celda => celda.contains(ebrio));
+        let nuevaPosicion;
+
+        if (direccion === 'norte') {
+          nuevaPosicion = posicionActual - 10;
+          if (nuevaPosicion < 0) {
+            nuevaPosicion = posicionActual;
+          }
+        } else if (direccion === 'sur') {
+          nuevaPosicion = posicionActual + 10;
+          if (nuevaPosicion >= 100) {
+            nuevaPosicion = posicionActual;
+          }
+        } else if (direccion === 'este') {
+          nuevaPosicion = posicionActual + 1;
+          if (nuevaPosicion % 10 === 0) {
+            nuevaPosicion = posicionActual;
+          }
+        } else {
+          nuevaPosicion = posicionActual - 1;
+          if ((nuevaPosicion + 1) % 10 === 0) {
+            nuevaPosicion = posicionActual;
+          }
+        }
+
+        celdas[posicionActual].removeChild(ebrio);
+        celdas[nuevaPosicion].appendChild(ebrio);
+
+        if (totalSimulaciones === 9) {
+          const posicionInicial = celdas.findIndex(celda => celda.contains(inicio));
+          const posicionFinal = celdas.findIndex(celda => celda.contains(ebrio));
+
+          const xInicial = Math.floor(posicionInicial / 10);
+          const yInicial = posicionInicial % 10;
+          const xFinal = Math.floor(posicionFinal / 10);
+          const yFinal = posicionFinal % 10;
+
+          if (Math.abs(xFinal - xInicial) + Math.abs(yFinal - yInicial) === 2) {
+            termino2Calles++;
+            resultadoTexto.textContent = 'El ebrio terminó a 2 calles de donde estaba.';
+          } else {
+            resultadoTexto.textContent = 'El ebrio no terminó a 2 calles de donde estaba.';
+          }
+
+          totalSimulaciones++;
+          termino2CallesTexto.textContent = termino2Calles;
+          reiniciosSimulacionTexto.textContent = reiniciosSimulacion;
+          calcularProbabilidad();
+        } else {
+          totalSimulaciones++;
+        }
+      }
+
+      function caminar10Calles() {
+        for (let i = 0; i < 10; i++) {
+          setTimeout(moverEbrio, i * 500);
+        }
+      }
+
+      function calcularProbabilidad() {
+        const probabilidad = (termino2Calles / reiniciosSimulacion) * 100;
+        probabilidadTexto.textContent = `Probabilidad: ${probabilidad.toFixed(2)}%`;
+      }
+
+      const inicioBtn = document.getElementById('inicioBtn');
+      inicioBtn.addEventListener('click', function() {
+        totalSimulaciones = 0;
+        resultadoTexto.textContent = 'Cargando recorrido...';
+        reiniciosSimulacion++;
+
+        const posicionActual = celdas.findIndex(celda => celda.contains(ebrio));
+        celdas[posicionActual].removeChild(ebrio);
+
+        celdas[44].appendChild(ebrio);
+
+        caminar10Calles();
+      });
+
+      caminar10Calles();
+    });
+  </script>
+</body>
+</html>
